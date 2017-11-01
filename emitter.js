@@ -28,7 +28,9 @@ class Event {
     }
 
     removeSubscription(context) {
-        this.subscriptions.delete(context);
+        if (this.subscriptions.has(context)) {
+            this.subscriptions.delete(context);
+        }
     }
 
     emit() {
@@ -133,12 +135,11 @@ class Emitter {
         if (times <= 0) {
             return this.on(event, context, handler);
         }
-        let counter = 1;
         const newHandler = () => {
-            if (counter <= times) {
+            if (times > 0) {
                 handler.call(context);
             }
-            counter++;
+            times--;
         };
 
         return this.on(event, context, newHandler);
@@ -157,12 +158,13 @@ class Emitter {
         if (frequency <= 0) {
             return this.on(event, context, handler);
         }
-        let counter = 1;
+        let counter = 0;
         const newHandler = () => {
-            counter++;
-            if (counter % frequency === 0) {
+            counter %= frequency;
+            if (counter === 0) {
                 handler.call(context);
             }
+            counter++;
         };
 
         return this.on(event, context, newHandler);
