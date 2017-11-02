@@ -53,14 +53,14 @@ class Emitter {
     static _parseEventPath(path) {
         return path
             .split('.')
-            .filter(x => x);
+            .filter(Boolean);
     }
 
-    _getEvents(path) {
+    _getOrCreateEvents(path) {
         const events = Emitter._parseEventPath(path);
-        let result = [];
+        const result = [];
         let current = this._root;
-        for (let event of events) {
+        for (const event of events) {
             if (!current.children.has(event)) {
                 current.addChild(event);
             }
@@ -71,8 +71,8 @@ class Emitter {
         return result;
     }
 
-    _getSpecificEvent(path) {
-        return this._getEvents(path)
+    _getOrCreateSpecificEvent(path) {
+        return this._getOrCreateEvents(path)
             .pop();
     }
 
@@ -85,7 +85,7 @@ class Emitter {
      */
     on(event, context, handler) {
         const subscription = Emitter._makeSubscription(context, handler);
-        this._getSpecificEvent(event)
+        this._getOrCreateSpecificEvent(event)
             .addSubscription(subscription);
 
         return this;
@@ -98,7 +98,7 @@ class Emitter {
      * @returns {Emitter}
      */
     off(event, context) {
-        event = this._getSpecificEvent(event);
+        event = this._getOrCreateSpecificEvent(event);
         const stack = [event];
         while (stack.length) {
             let current = stack.pop();
@@ -115,7 +115,7 @@ class Emitter {
      * @returns {Emitter}
      */
     emit(event) {
-        this._getEvents(event)
+        this._getOrCreateEvents(event)
             .reverse()
             .forEach(e => e.emit());
 
